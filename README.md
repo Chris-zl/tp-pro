@@ -10,7 +10,7 @@ Regarder la démonstration complète du TP2 : [Voir la vidéo sur Google Drive](
 ## Captures d'écran
 
 ### 1. Page de connexion
-![Page de connexion](screenshots/acceuil.png)
+![Page de connexion](screenshots/accueil.png)
 
 ### 2. Page d'accueil (CV)
 ![Page d'accueil CV](screenshots/cv.png)
