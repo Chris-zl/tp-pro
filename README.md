@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # zawadi_lufungulo
 
 A new Flutter project.
@@ -15,3 +16,12 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+![Accueil](accueil.png)
+
+![cv](cv.png)
+
+![famille](famille.png)
+
+![contact](contact.png)
+>>>>>>> aa6f0657cfa8a9f5a5efa5963795f2ad26f1012c
