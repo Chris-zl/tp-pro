@@ -1,10 +1,25 @@
-<<<<<<< HEAD
 # zawadi_lufungulo
 
 A new Flutter project.
 
 ## Getting Started
+## Vidéo de démonstration
 
+Regarder la démonstration complète du TP2 : [Voir la vidéo sur Google Drive]()
+
+## Captures d'écran
+
+### 1. Page de connexion
+![Page de connexion](screenshots/acceuil.png)
+
+### 2. Page d'accueil (CV)
+![Page d'accueil CV](screenshots/cv.png)
+
+### 3. Page famille
+![Page famille](screenshots/famille.png)
+
+### 4. Page contact
+![Page contact](screenshots/contact.png)
 This project is a starting point for a Flutter application.
 
 A few resources to get you started if this is your first Flutter project:
@@ -16,12 +31,3 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-=======
-![Accueil](accueil.png)
-
-![cv](cv.png)
-
-![famille](famille.png)
-
-![contact](contact.png)
->>>>>>> aa6f0657cfa8a9f5a5efa5963795f2ad26f1012c
