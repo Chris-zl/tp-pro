@@ -43,9 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-<<<<<<< HEAD
 
 # Widget Preview related
 .widget_preview/
-=======
->>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
+

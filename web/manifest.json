@@ -1,11 +1,8 @@
 {
-<<<<<<< HEAD
     "name": "zawadi_lufungulo",
     "short_name": "zawadi_lufungulo",
-=======
     "name": "christelle_cv_flutter",
     "short_name": "christelle_cv_flutter",
->>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -616,7 +616,7 @@ class _AccueilPageState extends State<AccueilPage> {
             page = index;
           });
         },
-        indicatorColor: rose.withOpacity(0.3),
+        indicatorColor: rose.withValues(alpha: 0.3),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.description_outlined),
@@ -949,14 +949,14 @@ class _FamillePageState extends State<FamillePage> {
     if (url != null) {
       return CircleAvatar(
         radius: 26,
-        backgroundColor: rose.withOpacity(0.4),
+        backgroundColor: rose.withValues(alpha: 0.4),
         backgroundImage: NetworkImage(url),
         onBackgroundImageError: (_, __) {},
       );
     }
     return CircleAvatar(
       radius: 26,
-      backgroundColor: rose.withOpacity(0.4),
+      backgroundColor: rose.withValues(alpha: 0.4),
       child: const Icon(Icons.person, color: violet),
     );
   }
