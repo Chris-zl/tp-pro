@@ -4,10 +4,17 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
+<<<<<<< HEAD
 set(BINARY_NAME "zawadi_lufungulo")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.example.zawadi_lufungulo")
+=======
+set(BINARY_NAME "christelle_cv_flutter")
+# The unique GTK application identifier for this application. See:
+# https://wiki.gnome.org/HowDoI/ChooseApplicationID
+set(APPLICATION_ID "com.example.christelle_cv_flutter")
+>>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -106,7 +113,11 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+<<<<<<< HEAD
 # Copy the native assets provided by the hook/build.dart from all packages.
+=======
+# Copy the native assets provided by the build.dart from all packages.
+>>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"
    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"

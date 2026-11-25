@@ -1,38 +1,44 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const String baseUrl = 'http://172.20.10.7/api-test/public';
+const violet = Color(0xFF7041A6);
+const rose = Color(0xFFE7A4C7);
+const fond = Color(0xFFFFF8FC);
+
+const String baseUrl = 'http://localhost/api-test/public';
 
 void main() {
-  runApp(const MonCvApp());
+  runApp(const ZawadiApp());
 }
 
-class MonCvApp extends StatelessWidget {
-  const MonCvApp({super.key});
+class ZawadiApp extends StatelessWidget {
+  const ZawadiApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CV',
       debugShowCheckedModeBanner: false,
+      title: 'CV Zawadi Christelle',
       theme: ThemeData(
+        scaffoldBackgroundColor: fond,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 219, 101, 180),
+          seedColor: violet,
+          primary: violet,
+          secondary: rose,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 219, 101, 180),
+          backgroundColor: violet,
           foregroundColor: Colors.white,
           centerTitle: true,
           elevation: 2,
         ),
       ),
-      home: const LoginPage(),
+      home: const ConnexionPage(),
     );
   }
 }
@@ -159,7 +165,6 @@ class ApiService {
     }
   }
 
-  // POST /accounts/register
   static Future<String?> register(String email, String password) async {
     try {
       final response = await http.post(
@@ -179,11 +184,10 @@ class ApiService {
       }
       return _extractError(response, 'Échec de création du compte');
     } catch (e) {
-      return 'Erreur réseau : vérifiez XAMPP et l’IP ($baseUrl) — $e';
+      return 'Erreur réseau !($baseUrl) — $e';
     }
   }
 
-  // GET /famille-membres
   static Future<List<MembreFamille>> getMembres() async {
     final response = await http.get(
       Uri.parse('$baseUrl/famille-membres'),
@@ -202,9 +206,22 @@ class ApiService {
     throw Exception(_extractError(response, 'Impossible de charger la famille'));
   }
 
+  static Future<void> _attachImage(
+    http.MultipartRequest request,
+    XFile imageFile,
+  ) async {
+    final bytes = await imageFile.readAsBytes();
+    final filename = imageFile.name.isNotEmpty ? imageFile.name : 'photo.jpg';
+    request.files.add(
+      http.MultipartFile.fromBytes('image', bytes, filename: filename),
+    );
+  }
+
   // POST /famille-membres (JSON sans image, ou multipart/form-data avec image)
   static Future<String?> createMembre(
-      MembreFamille membre, File? imageFile) async {
+    MembreFamille membre,
+    XFile? imageFile,
+  ) async {
     try {
       if (imageFile == null) {
         final response = await http.post(
@@ -230,8 +247,7 @@ class ApiService {
           'date_naissance': membre.dateNaissance.trim(),
           'parente': membre.parente.trim(),
         });
-        request.files
-            .add(await http.MultipartFile.fromPath('image', imageFile.path));
+        await _attachImage(request, imageFile);
 
         final streamed = await request.send();
         final response = await http.Response.fromStream(streamed);
@@ -248,7 +264,9 @@ class ApiService {
   // PUT /famille-membres/{id} (JSON sans changer l'image)
   // ou POST /famille-membres/{id} (multipart/form-data pour changer l'image)
   static Future<String?> updateMembre(
-      MembreFamille membre, File? nouvelleImage) async {
+    MembreFamille membre,
+    XFile? nouvelleImage,
+  ) async {
     if (membre.id == null) return 'ID manquant';
     try {
       if (nouvelleImage == null) {
@@ -273,8 +291,7 @@ class ApiService {
           'date_naissance': membre.dateNaissance.trim(),
           'parente': membre.parente.trim(),
         });
-        request.files
-            .add(await http.MultipartFile.fromPath('image', nouvelleImage.path));
+        await _attachImage(request, nouvelleImage);
 
         final streamed = await request.send();
         final response = await http.Response.fromStream(streamed);
@@ -289,7 +306,6 @@ class ApiService {
     }
   }
 
-  // DELETE /famille-membres/{id}
   static Future<String?> deleteMembre(String id) async {
     try {
       final response = await http.delete(
@@ -306,14 +322,14 @@ class ApiService {
   }
 }
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class ConnexionPage extends StatefulWidget {
+  const ConnexionPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<ConnexionPage> createState() => _ConnexionPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ConnexionPageState extends State<ConnexionPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -342,7 +358,7 @@ class _LoginPageState extends State<LoginPage> {
     if (err == null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+        MaterialPageRoute(builder: (_) => const AccueilPage()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -358,7 +374,11 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Créer un compte'),
+        backgroundColor: fond,
+        title: const Text(
+          'Créer un compte',
+          style: TextStyle(color: violet, fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -367,7 +387,7 @@ class _LoginPageState extends State<LoginPage> {
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Email (max 100 car.)',
-                prefixIcon: Icon(Icons.email),
+                prefixIcon: Icon(Icons.email, color: violet),
               ),
             ),
             const SizedBox(height: 12),
@@ -376,7 +396,7 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Mot de passe (min 6 car.)',
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: Icon(Icons.lock, color: violet),
               ),
             ),
           ],
@@ -384,9 +404,13 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: const Text('Annuler', style: TextStyle(color: violet)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: violet,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               final email = emailCtrl.text.trim();
               final pass = passCtrl.text;
@@ -424,107 +448,138 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Card(
-            elevation: 4,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [violet, rose],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircleAvatar(
-                      radius: 38,
-                      backgroundColor: Color.fromARGB(255, 219, 101, 180),
-                      child:
-                          Icon(Icons.lock_person, size: 40, color: Colors.white),
-                    ),
-                    const SizedBox(height: 16),
+                    const Icon(Icons.person_pin, size: 88, color: Colors.white),
+                    const SizedBox(height: 12),
                     const Text(
-                      'Connexion',
+                      'BIENVENUE',
                       style: TextStyle(
-                        fontSize: 24,
+                        color: Colors.white,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 219, 101, 180),
                       ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Mon CV',
-                      style: TextStyle(color: Colors.grey),
+                      'Zawadi Lufungulo Christelle',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 17),
                     ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Identifiant (Email)',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: fond,
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Entrez votre email'
-                          : null,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Mot de passe',
-                        prefixIcon: const Icon(Icons.lock),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? 'Entrez votre mot de passe'
-                          : null,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _seConnecter,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 219, 101, 180),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Text(
-                                'Se connecter',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email, color: violet),
+                                border: OutlineInputBorder(),
                               ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Entrez votre email'
+                                  : null,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: InputDecoration(
+                                labelText: 'Mot de passe',
+                                prefixIcon:
+                                    const Icon(Icons.lock, color: violet),
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: violet,
+                                  ),
+                                  onPressed: () => setState(
+                                      () => _obscurePassword = !_obscurePassword),
+                                ),
+                              ),
+                              validator: (v) => (v == null || v.isEmpty)
+                                  ? 'Entrez votre mot de passe'
+                                  : null,
+                            ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: violet,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(color: violet),
+                                  ),
+                                ),
+                                onPressed: _isLoading ? null : _seConnecter,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: violet,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Se connecter',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: _isLoading ? null : _ouvrirInscription,
+                              child: const Text(
+                                'Créer un compte',
+                                style: TextStyle(
+                                  color: violet,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _isLoading ? null : _ouvrirInscription,
-                      child: const Text('Créer un compte'),
                     ),
                   ],
                 ),
@@ -537,312 +592,155 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class MainNavigationPage extends StatefulWidget {
-  const MainNavigationPage({super.key});
+class AccueilPage extends StatefulWidget {
+  const AccueilPage({super.key});
 
   @override
-  State<MainNavigationPage> createState() => _MainNavigationPageState();
+  State<AccueilPage> createState() => _AccueilPageState();
 }
 
-class _MainNavigationPageState extends State<MainNavigationPage> {
-  int _selectedIndex = 0;
+class _AccueilPageState extends State<AccueilPage> {
+  int page = 0;
 
-  final List<Widget> _pages = const [
-    CvHomePage(),
-    FamillePage(),
-    ContactPage(),
-  ];
-
-  final List<String> _titles = const [
-    'Mon CV',
-    'Famille',
-    'Contact',
-  ];
-
-  void _deconnexion() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
-  }
+  final pages = const [CvPage(), FamillePage(), ContactPage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Déconnexion',
-            onPressed: _deconnexion,
+      backgroundColor: fond,
+      body: pages[page],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: page,
+        onDestinationSelected: (index) {
+          setState(() {
+            page = index;
+          });
+        },
+        indicatorColor: rose.withOpacity(0.3),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.description_outlined),
+            selectedIcon: Icon(Icons.description),
+            label: 'Mon CV',
           ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const UserAccountsDrawerHeader(
-              decoration: BoxDecoration(color: Color.fromARGB(255, 219, 101, 180)),
-              accountName: Text(
-                'ZAWADI',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              accountEmail: Text('Étudiant - ISIG'),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Text(
-                  'NM',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 219, 101, 180),
-                  ),
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.badge),
-              title: const Text('Accueil (CV)'),
-              selected: _selectedIndex == 0,
-              onTap: () {
-                setState(() => _selectedIndex = 0);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.family_restroom),
-              title: const Text('Famille'),
-              selected: _selectedIndex == 1,
-              onTap: () {
-                setState(() => _selectedIndex = 1);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.contact_phone),
-              title: const Text('Contact'),
-              selected: _selectedIndex == 2,
-              onTap: () {
-                setState(() => _selectedIndex = 2);
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title:
-                  const Text('Déconnexion', style: TextStyle(color: Colors.red)),
-              onTap: _deconnexion,
-            ),
-          ],
-        ),
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 219, 101, 180),
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'CV'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.family_restroom), label: 'Famille'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.contact_mail), label: 'Contact'),
+          NavigationDestination(
+            icon: Icon(Icons.family_restroom),
+            label: 'Famille',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.contact_phone),
+            label: 'Contact',
+          ),
         ],
       ),
     );
   }
 }
 
-class CvHomePage extends StatelessWidget {
-  const CvHomePage({super.key});
+class CvPage extends StatelessWidget {
+  const CvPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          elevation: 3,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          child: const Padding(
-            padding: EdgeInsets.all(18),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 38,
-                  backgroundColor: Color.fromARGB(255, 219, 101, 180),
-                  child: Text(
-                    'NM',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'zawadi christelle',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 219, 101, 180),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text('Développeur Mobile & Étudiant en Informatique',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Né le 05/01/2005 à Kiliba',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Scaffold(
+      backgroundColor: fond,
+      appBar: AppBar(
+        title: const Text(
+          'Curriculum Vitae',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: violet,
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [violet, rose],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
             ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        _sectionTitle('Profil'),
-        const Card(
-          child: Padding(
-            padding: EdgeInsets.all(14),
-            child: Text(
-              'Né le 5 janvier 2005 à Kiliba. J’ai grandi au Burundi à Sosumo, effectué mon parcours scolaire à Gihofi (Sosumo), Montatos Orthodoxe, à l’Institut Mwanga d’Uvira (secondaire et humanités), puis poursuivi mes études universitaires à l’ISIG.',
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        _sectionTitle('Formation'),
-        const Card(
-          child: Column(
-            children: [
-              ListTile(
-                leading: Icon(Icons.school, color: Color.fromARGB(255, 219, 101, 180)),
-                title: Text('Université'),
-                subtitle: Text('ISIG'),
-              ),
-              Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.school, color: Color.fromARGB(255, 219, 101, 180)),
-                title: Text('Secondaire & Humanités'),
-                subtitle: Text('Institut Mwanga d’Uvira'),
-              ),
-              Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.school, color: Color.fromARGB(255, 219, 101, 180)),
-                title: Text('École primaire'),
-                subtitle: Text('Montatos Orthodoxe (Sosumo, Burundi)'),
-              ),
-              Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.school, color: Color.fromARGB(255, 219, 101, 180)),
-                title: Text('École maternelle'),
-                subtitle: Text('Gihofi — Sosumo (Burundi)'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        _sectionTitle('Expériences & Projets'),
-        const Card(
-          child: Column(
-            children: [
-              ListTile(
-                leading: Icon(Icons.phone_android, color: Colors.teal),
-                title: Text('Application Mobile CV & Famille (Flutter)'),
-                subtitle: Text(
-                    'Authentification et gestion dynamique de la famille via API REST.'),
-              ),
-              Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.code, color: Colors.teal),
-                title: Text('Projets Académiques'),
-                subtitle: Text('Développement logiciel et bases de données.'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        _sectionTitle('Compétences'),
-        const Card(
-          child: Padding(
-            padding: EdgeInsets.all(14),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Techniques :', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    Chip(label: Text('Flutter & Dart')),
-                    Chip(label: Text('API REST')),
-                    Chip(label: Text('MySQL')),
-                    Chip(label: Text('Git & GitHub')),
-                  ],
+                ClipOval(
+                  child: Image.asset(
+                    'assets/2.jpg',
+                    width: 125,
+                    height: 125,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 125,
+                        height: 125,
+                        color: Colors.white,
+                        child: const Icon(
+                          Icons.person,
+                          size: 75,
+                          color: violet,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                SizedBox(height: 10),
-                Text('Linguistiques :',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    Chip(label: Text('Français')),
-                    Chip(label: Text('Swahili')),
-                    Chip(label: Text('Kirundi')),
-                    Chip(label: Text('Anglais')),
-                  ],
+                const SizedBox(height: 15),
+                const Text(
+                  'ZAWADI LUFUNGULO CHRISTELLE',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Étudiante à l’ISIG',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ],
             ),
           ),
-        ),
-        const SizedBox(height: 14),
-        _sectionTitle('Centres d’intérêt'),
-        const Card(
-          child: Padding(
-            padding: EdgeInsets.all(14),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                Chip(label: Text('Programmation')),
-                Chip(label: Text('Football')),
-                Chip(label: Text('Musique')),
-                Chip(label: Text('Lecture')),
-              ],
+          const SizedBox(height: 20),
+          sectionTitre('INFORMATIONS PERSONNELLES'),
+          info('Date de naissance', '05 janvier 2005'),
+          info('Lieu de naissance', 'Kiliba'),
+          info('Situation familiale', 'Non précisée'),
+          sectionTitre('PARCOURS SCOLAIRE ET ACADÉMIQUE'),
+          info('École maternelle', 'SOSUMO, Gihofi, Burundi'),
+          info('École primaire', 'Montatos Orthodoxe'),
+          info('École secondaire', 'Institut Mwanga d’Uvira'),
+          info('Humanités', 'Institut Mwanga d’Uvira'),
+          info('Université', 'ISIG'),
+          sectionTitre('COMPÉTENCES'),
+          const Text(
+            'Les compétences professionnelles et informatiques '
+            'seront ajoutées lorsque les informations seront disponibles.',
+            style: TextStyle(fontSize: 15),
+          ),
+          sectionTitre('LANGUES'),
+          const Text(
+            'Les langues parlées seront précisées.',
+            style: TextStyle(fontSize: 15),
+          ),
+          sectionTitre('CENTRES D’INTÉRÊT'),
+          const Text(
+            'Informations à compléter.',
+            style: TextStyle(fontSize: 15),
+          ),
+          const SizedBox(height: 20),
+          const Center(
+            child: Text(
+              '© Zawadi Lufungulo Christelle',
+              style: TextStyle(color: violet, fontWeight: FontWeight.bold),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  static Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color.fromARGB(255, 219, 101, 180),
-        ),
+        ],
       ),
     );
   }
@@ -895,13 +793,17 @@ class _FamillePageState extends State<FamillePage> {
     final lieuCtrl = TextEditingController(text: existant?.lieuNaissance ?? '');
     final dateCtrl = TextEditingController(text: existant?.dateNaissance ?? '');
     final parenteCtrl = TextEditingController(text: existant?.parente ?? '');
-    File? pickedImage;
+    XFile? pickedImage;
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(existant == null ? 'Ajouter un membre' : 'Modifier'),
+          backgroundColor: fond,
+          title: Text(
+            existant == null ? 'Ajouter un membre' : 'Modifier un membre',
+            style: const TextStyle(color: violet, fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: Form(
               key: formKey,
@@ -937,7 +839,7 @@ class _FamillePageState extends State<FamillePage> {
                     controller: dateCtrl,
                     decoration: const InputDecoration(
                       labelText: 'Date naissance (AAAA-MM-JJ) *',
-                      hintText: '1975-05-12',
+                      hintText: '1970-05-12',
                     ),
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Obligatoire' : null,
@@ -958,12 +860,14 @@ class _FamillePageState extends State<FamillePage> {
                           pickedImage != null
                               ? 'Image choisie'
                               : 'Image : facultative',
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: 12, color: violet),
                         ),
                       ),
                       TextButton.icon(
-                        icon: const Icon(Icons.photo_library, size: 18),
-                        label: const Text('Choisir'),
+                        icon: const Icon(Icons.photo_library,
+                            size: 18, color: violet),
+                        label: const Text('Choisir',
+                            style: TextStyle(color: violet)),
                         onPressed: () async {
                           final picker = ImagePicker();
                           final file = await picker.pickImage(
@@ -971,7 +875,7 @@ class _FamillePageState extends State<FamillePage> {
                             imageQuality: 80,
                           );
                           if (file != null) {
-                            setDialogState(() => pickedImage = File(file.path));
+                            setDialogState(() => pickedImage = file);
                           }
                         },
                       ),
@@ -984,9 +888,13 @@ class _FamillePageState extends State<FamillePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Annuler'),
+              child: const Text('Annuler', style: TextStyle(color: violet)),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: violet,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
 
@@ -1041,87 +949,186 @@ class _FamillePageState extends State<FamillePage> {
     if (url != null) {
       return CircleAvatar(
         radius: 26,
+        backgroundColor: rose.withOpacity(0.4),
         backgroundImage: NetworkImage(url),
         onBackgroundImageError: (_, __) {},
       );
     }
-    return const CircleAvatar(
+    return CircleAvatar(
       radius: 26,
-      backgroundColor: Color.fromARGB(255, 219, 101, 180),
-      child: Icon(Icons.person, color: Colors.white),
+      backgroundColor: rose.withOpacity(0.4),
+      child: const Icon(Icons.person, color: violet),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: fond,
+      appBar: AppBar(
+        title: const Text('Ma famille', style: TextStyle(color: Colors.white)),
+        backgroundColor: violet,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _charger,
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _charger,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_error!, textAlign: TextAlign.center),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _charger,
-                            child: const Text('Réessayer'),
-                          ),
-                        ],
-                      ),
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [violet, rose]),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.family_restroom, color: Colors.white, size: 65),
+                  SizedBox(height: 10),
+                  Text(
+                    'MA FAMILLE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
                     ),
-                  )
-                : _membres.isEmpty
-                    ? const Center(child: Text('Aucun membre enregistré.'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: _membres.length,
-                        itemBuilder: (context, i) {
-                          final m = _membres[i];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: ListTile(
-                              leading: _avatar(m),
-                              title: Text(
-                                m.nomComplet,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                '${m.parente} • Né(e) à ${m.lieuNaissance} (${m.dateNaissance})',
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        color: Colors.blue),
-                                    onPressed: () =>
-                                        _ouvrirFormulaire(existant: m),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                    onPressed: () => _supprimer(m),
-                                  ),
-                                ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator(color: violet)),
+              )
+            else if (_error != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: violet,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _charger,
+                      child: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_membres.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Text(
+                  'Aucun membre enregistré sur le serveur. Appuyez sur + pour ajouter.',
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ..._membres.map(
+                (m) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    children: [
+                      _avatar(m),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              m.nomComplet,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
                             ),
-                          );
-                        },
+                            Text(
+                              m.parente,
+                              style: const TextStyle(color: violet),
+                            ),
+                            if (m.lieuNaissance.isNotEmpty ||
+                                m.dateNaissance.isNotEmpty)
+                              Text(
+                                '${m.lieuNaissance} • ${m.dateNaissance}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: violet),
+                        onPressed: () => _ouvrirFormulaire(existant: m),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _supprimer(m),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.store, color: violet, size: 35),
+                  SizedBox(height: 8),
+                  Text(
+                    'Profession des parents',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  ),
+                  Text('Commerçants', style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 15),
+                  Icon(Icons.person_outline, color: violet, size: 30),
+                  Text(
+                    'Fille unique',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  ),
+                  Text('Pas de frères ni de sœurs'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 70),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _ouvrirFormulaire(),
-        backgroundColor: const Color.fromARGB(255, 219, 101, 180),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: violet,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Ajouter'),
+        onPressed: () => _ouvrirFormulaire(),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -1142,42 +1149,99 @@ class ContactPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.phone, color: Colors.green),
-            title: const Text('Téléphone'),
-            subtitle: const Text('+243974602407'),
+    return Scaffold(
+      backgroundColor: fond,
+      appBar: AppBar(
+        title: const Text(
+          'Me contacter',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: violet,
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Center(
+            child: ClipOval(
+              child: Image.asset(
+                'assets/2.jpg',
+                width: 110,
+                height: 110,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 110,
+                    height: 110,
+                    color: rose,
+                    child: const Icon(
+                      Icons.person,
+                      size: 65,
+                      color: violet,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
+          const SizedBox(height: 15),
+          const Text(
+            'Zawadi Lufungulo Christelle',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+              color: violet,
+            ),
+          ),
+          const SizedBox(height: 25),
+          InkWell(
             onTap: () => _open(context, 'tel:+243974602407'),
+            child: info('Téléphone', '+243 974 602 407'),
           ),
-        ),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.email, color: Colors.red),
-            title: const Text('E-mail'),
-            subtitle: const Text('zawadilufungulochristelle@g,mail.com'),
-            onTap: () => _open(context, 'mailto:zadi.lufungulochristelle@example.com'),
-          ),
-        ),
-        const Card(
-          child: ListTile(
-            leading: Icon(Icons.location_on, color: Colors.orange),
-            title: Text('Adresse'),
-            subtitle: Text('Goma, Nord-Kivu, RDC'),
-          ),
-        ),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.code),
-            title: const Text('GitHub'),
-            subtitle: const Text('github.com/Chris-zl'),
-            onTap: () =>
-                _open(context, 'https://github.com/Chris-zl'),
-          ),
-        ),
-      ],
+          info('Facebook', 'Zawadi Chris'),
+          info('TikTok', 'Chris'),
+          info('Lieu de naissance', 'Kiliba'),
+        ],
+      ),
     );
   }
+}
+
+Widget sectionTitre(String titre) {
+  return Padding(
+    padding: const EdgeInsets.only(top: 22, bottom: 10),
+    child: Text(
+      titre,
+      style: const TextStyle(
+        color: violet,
+        fontSize: 17,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+}
+
+Widget info(String titre, String valeur) {
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(bottom: 9),
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titre,
+          style: const TextStyle(color: violet, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(valeur, style: const TextStyle(fontSize: 15)),
+      ],
+    ),
+  );
 }

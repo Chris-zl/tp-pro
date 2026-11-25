@@ -90,12 +90,21 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
+<<<<<<< HEAD
             VALUE "FileDescription", "zawadi_lufungulo" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "zawadi_lufungulo" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "zawadi_lufungulo.exe" "\0"
             VALUE "ProductName", "zawadi_lufungulo" "\0"
+=======
+            VALUE "FileDescription", "christelle_cv_flutter" "\0"
+            VALUE "FileVersion", VERSION_AS_STRING "\0"
+            VALUE "InternalName", "christelle_cv_flutter" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
+            VALUE "OriginalFilename", "christelle_cv_flutter.exe" "\0"
+            VALUE "ProductName", "christelle_cv_flutter" "\0"
+>>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

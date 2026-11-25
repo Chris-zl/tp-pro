@@ -27,7 +27,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
+<<<<<<< HEAD
   if (!window.Create(L"zawadi_lufungulo", origin, size)) {
+=======
+  if (!window.Create(L"christelle_cv_flutter", origin, size)) {
+>>>>>>> 71821f7 (Mise à jour finale TP Flutter Zawadi Christelle)
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
